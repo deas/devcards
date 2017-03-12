@@ -10,6 +10,9 @@
 
    [clojure.string :as string]
    [cljs.test]
+   [react]
+   [react-dom]
+   [react-dom.server]
    [cljs.core.async :refer [put! chan timeout <! close! alts!] :as async])
   (:require-macros
    [cljs-react-reload.core :refer [defonce-react-class def-react-class]]
@@ -86,7 +89,7 @@
 
 (defn- react-raw [raw-html-str]
   "A React component that renders raw html."
-  (.div (.-DOM js/React)
+  (.div react/DOM
         (clj->js { :key (str (hash raw-html-str))
                    :dangerouslySetInnerHTML
                    { :__html
@@ -122,7 +125,7 @@
              (get-props this :code)]])))})
 
 (defn code-highlight [code-str lang]
-  (js/React.createElement CodeHighlight #js {:code code-str
+  (react/createElement CodeHighlight #js {:code code-str
                                              :lang lang}))
 
 (defmulti markdown-block->react :type)
@@ -131,7 +134,7 @@
   (-> content mark/markdown-to-html react-raw))
 
 (defmethod markdown-block->react :code-block [{:keys [content] :as block}]
-  (js/React.createElement CodeHighlight #js {:code (:content block)
+  (react/createElement CodeHighlight #js {:code (:content block)
                                              :lang (:lang block)}))
 
 (declare react-element?)
@@ -216,7 +219,7 @@
 
 (defn ref->node [this ref]
   (when-let [comp (aget (.. this -refs) ref)]
-    (js/ReactDOM.findDOMNode comp)))
+    (react-dom/findDOMNode comp)))
 
 (defn get-props [this k]
   (aget (.-props this) (name k)))
@@ -244,7 +247,7 @@
 
 ;; this is not currently being used
 (defn dont-update [change-count children-thunk]
-  (js/React.createElement DontUpdate
+  (react/createElement DontUpdate
                           #js { :change_count change-count
                                 :children_thunk children-thunk}))
 
@@ -378,7 +381,7 @@
          (this-as
           this
           (when-let [node (ref->node this (get-state this :unique_id))]
-            (js/ReactDOM.unmountComponentAtNode node))))
+            (react-dom/unmountComponentAtNode node))))
        :componentDidMount
        (fn [] (this-as this (render-into-dom this)))
        :render
@@ -386,10 +389,10 @@
          (fn []
            (this-as
             this
-            (js/React.DOM.div
+            (react/DOM.div
              #js { :className "com-rigsomelight-devcards-dom-node" :ref (get-state this :unique_id)}
              "Card has not mounted DOM node.")))
-         (fn [] (js/React.DOM.div "Card has not mounted DOM node.")))})
+         (fn [] (react/DOM.div "Card has not mounted DOM node.")))})
 
 (defn booler? [key opts]
   (let [x (get opts key)]
@@ -492,7 +495,7 @@
   (let [errors (validate-card-options card-options)]
     (if (not-empty errors)
       (render-errors card-options errors)
-      (js/React.createElement DevcardBase #js { :card (add-environment-defaults card-options) }))))
+      (react/createElement DevcardBase #js { :card (add-environment-defaults card-options) }))))
 
 (defrecord IdentiyOptions [obj]
   IDevcardOptions
@@ -543,7 +546,7 @@
 ;; keep
 (defn- dom-node* [node-fn]
   (fn [data-atom owner]
-     (js/React.createElement DomComponent
+     (react/createElement DomComponent
                              #js {:node_fn   node-fn
                                   :data_atom data-atom})))
 
@@ -751,7 +754,7 @@
 
 ;; keep
 (defn- hist-recorder* [data-atom]
-  (js/React.createElement HistoryComponent
+  (react/createElement HistoryComponent
                          #js { :data_atom data-atom :key "devcards-history-control-bar"}))
 
 ;; Testing via cljs.test
@@ -807,13 +810,13 @@
    m
    (sab/html
     [:div
-     (js/React.createElement CodeHighlight #js {:code (utils/pprint-code expected)
+     (react/createElement CodeHighlight #js {:code (utils/pprint-code expected)
                                                 :lang "clojure"})
      (when (= type :fail)
        (sab/html [:div {:style {:marginTop "5px"}}
                   [:div {:style {:position "absolute" :fontSize "0.9em"}} "▶"]
                   [:div {:style {:marginLeft "20px"}}
-                   (js/React.createElement CodeHighlight #js {:code (utils/pprint-code actual)
+                   (react/createElement CodeHighlight #js {:code (utils/pprint-code actual)
                                                               :lang "clojure"})]]))])))
 
 (defmethod test-render :pass [m]
@@ -991,7 +994,7 @@
     IDevcard
     (-devcard [this devcard-opts]
       (let [path (:path devcards.system/*devcard-data*)]
-        (js/React.createElement TestDevcard
+        (react/createElement TestDevcard
                                 #js {:test_thunks test-thunks
                                      :path path})))))
 
@@ -1025,7 +1028,7 @@
     (merge-front-matter-options! ns-symbol)
     (str
      "<div id=\"com-rigsomelight-devcards-main\">"
-     (js/React.renderToString
+     (react-dom.server/renderToString
       (sab/html
        [:div.com-rigsomelight-devcards-base.com-rigsomelight-devcards-string-render
         (dev/render-cards (dev/display-cards card) dev/app-state)]))
@@ -1033,7 +1036,7 @@
 
 (defn render-ns [ns-symbol app-state]
   (when-let [card (get-cards-for-ns ns-symbol)]
-    (js/React.render
+    (react-dom/render
      (sab/html
       [:div.com-rigsomelight-devcards-base.com-rigsomelight-devcards-string-render
        (dev/render-cards (dev/display-cards card) app-state)])

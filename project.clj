@@ -1,4 +1,4 @@
-(defproject devcards "0.2.2"
+(defproject org.clojars.deas/devcards "0.2.2-nm"
   :description "Devcards is a ClojureScript library that provides a lab space in which you can develop your UI components independently and interactively."
   :url "http://github.com/bhauman/devcards"
   :license {:name "Eclipse Public License"
@@ -9,8 +9,8 @@
                  [org.clojure/core.async  "0.2.391" :exclusions [org.clojure/tools.reader]]
                  [cljsjs/react "15.3.1-0"]
                  [cljsjs/react-dom "15.3.1-0"]
-                 [sablono "0.7.4"]
-                 [cljs-react-reload "0.1.1"]
+                 [org.clojars.deas/sablono "0.7.7-nm"]
+                 [org.clojars.deas/cljs-react-reload "0.1.1"]
                  [cljsjs/showdown "0.4.0-1"]]
 
   :source-paths ["src"]
